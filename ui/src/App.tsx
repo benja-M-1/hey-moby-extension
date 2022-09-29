@@ -236,7 +236,6 @@ export function App() {
 
   const matchCommands = useCallback((input: string) => {
     const lowerCaseInput = input.toLowerCase();
-    let commandMatched = false;
     commands.forEach(
       ({
         command,
@@ -258,9 +257,6 @@ export function App() {
             return testMatch(subcommand, lowerCaseInput);
           })
           .filter((x) => x);
-        if (results.length > 0) {
-          commandMatched = true;
-        }
         if (isFuzzyMatch && bestMatchOnly && results.length >= 2) {
           results.sort((a, b) => {
             if (isFuzzyMatch && a && b) {
@@ -294,18 +290,6 @@ export function App() {
         }
       }
     );
-
-    if (!commandMatched) {
-      setMessages((current) => [
-        ...current,
-        {
-          author: "Moby 🐳",
-          content: `I am sorry but I don't understand "${input}"`,
-          createdAt: new Date(),
-          isSent: true,
-        },
-      ]);
-    }
   }, []);
 
   const { transcript, interimTranscript, listening, resetTranscript } =
@@ -336,14 +320,8 @@ export function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [interimTranscript]);
 
-  const clear = () => {
-    resetTranscript();
-    setMessages([]);
-  };
-
   const startListening = () =>
     SpeechRecognition.startListening({ continuous: true });
-
   const stopListening = () => SpeechRecognition.stopListening();
 
   return (
@@ -446,38 +424,29 @@ export function App() {
             >
               {listening ? (
                 <Box display="flex" alignItems="center">
-                  <Typography variant="body2" color="text.secondary">
+                  <IconButton onClick={stopListening}>
                     <MicRoundedIcon
                       fontSize="small"
                       color="disabled"
                       alignmentBaseline="central"
-                      sx={{ verticalAlign: "bottom" }}
                     />
-                    You can talk, Moby is listening
+                  </IconButton>
+                  <Typography variant="body2" color="text.secondary">
+                    Click to mute
                   </Typography>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    onClick={stopListening}
-                  >
-                    Mute
-                  </Button>
                 </Box>
               ) : (
                 <Box display="flex" alignItems="center">
-                  <MicOffRoundedIcon
-                    fontSize="small"
-                    color="disabled"
-                    alignmentBaseline="central"
-                    sx={{ verticalAlign: "bottom", mr: 1 }}
-                  />
-                  <Button
-                    variant="contained"
-                    size="small"
-                    onClick={startListening}
-                  >
-                    Click to talk
-                  </Button>
+                  <IconButton onClick={startListening}>
+                    <MicOffRoundedIcon
+                      fontSize="small"
+                      color="disabled"
+                      alignmentBaseline="central"
+                    />
+                  </IconButton>
+                  <Typography variant="body2" color="text.secondary">
+                    Click to speak
+                  </Typography>
                 </Box>
               )}
               <IconButton onClick={() => setOpenHelpDialog(true)}>

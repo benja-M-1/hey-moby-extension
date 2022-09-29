@@ -1,6 +1,5 @@
 import {
   Avatar,
-  Button,
   Card,
   CardContent,
   CardHeader,
@@ -34,10 +33,10 @@ export function CombinedMessage({ messages, sx, ...props }: Props) {
           formatDistanceToNow(firstMessage.createdAt, { addSuffix: true })
         }
       />
-      <CardContent>
+      <CardContent sx={{ pt: 0 }}>
         {messages.map((message, key) => (
           <Stack key={key} direction="row" justifyContent="space-between">
-            <Typography mt={1} whiteSpace="pre-line">
+            <Typography mt={key > 0 ? 1 : 0} whiteSpace="pre-line">
               {!message.isSent && <CircularProgress size={14} />}
               {message.content}
             </Typography>

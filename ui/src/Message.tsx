@@ -32,9 +32,9 @@ export function Message({ message, sx, ...props }: Props) {
           formatDistanceToNow(message.createdAt, { addSuffix: true })
         }
       />
-      <CardContent>
+      <CardContent sx={{ pt: 0 }}>
         <Stack direction="row">
-          <Typography mt={1} whiteSpace="pre-line">
+          <Typography whiteSpace="pre-line">
             {!message.isSent && <CircularProgress size={14} />}
             {message.content}
           </Typography>
