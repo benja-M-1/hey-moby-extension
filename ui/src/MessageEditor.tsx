@@ -26,7 +26,10 @@ export function MessageEditor({ message, autoSave, onSend }: Props) {
 
     onSend({
       author: "You",
-      content: content.replace(/^\s+|\s+$/g, "").trim(),
+      content: content
+        .replace(/^\s+|\s+$/g, "")
+        .trim()
+        .toLowerCase(),
       createdAt: new Date(),
       isSent: true,
     });

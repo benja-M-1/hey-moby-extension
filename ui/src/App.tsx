@@ -105,7 +105,7 @@ export function App() {
       {
         command: "*open the * tab*",
         callback: (pre: string, tab: string, _rest: string) => {
-          switch (tab.toLowerCase()) {
+          switch (tab) {
             case "containers":
               ddClient.desktopUI.navigate.viewContainers();
               break;
@@ -149,7 +149,7 @@ export function App() {
           ];
 
           const image = containers.find((c) =>
-            c.text.includes(container.toLowerCase())
+            c.text.includes(container)
           )?.image;
 
           if (!image) {
@@ -235,6 +235,7 @@ export function App() {
   );
 
   const matchCommands = useCallback((input: string) => {
+    const lowerCaseInput = input.toLowerCase();
     let commandMatched = false;
     commands.forEach(
       ({
@@ -248,9 +249,13 @@ export function App() {
         const results = subcommands
           .map((subcommand) => {
             if (isFuzzyMatch) {
-              return testFuzzyMatch(subcommand, input, fuzzyMatchingThreshold);
+              return testFuzzyMatch(
+                subcommand,
+                lowerCaseInput,
+                fuzzyMatchingThreshold
+              );
             }
-            return testMatch(subcommand, input);
+            return testMatch(subcommand, lowerCaseInput);
           })
           .filter((x) => x);
         if (results.length > 0) {
@@ -268,7 +273,7 @@ export function App() {
           });
           const { command, commandWithoutSpecials, howSimilar } =
             results[0] as FuzzyMatch;
-          callback(commandWithoutSpecials, input, howSimilar, {
+          callback(commandWithoutSpecials, lowerCaseInput, howSimilar, {
             command,
             resetTranscript,
           });
@@ -277,7 +282,7 @@ export function App() {
             if (result?.isFuzzyMatch) {
               const { command, commandWithoutSpecials, howSimilar } =
                 result as FuzzyMatch;
-              callback(commandWithoutSpecials, input, howSimilar, {
+              callback(commandWithoutSpecials, lowerCaseInput, howSimilar, {
                 command,
                 resetTranscript,
               });
@@ -312,7 +317,7 @@ export function App() {
     if (interimTranscript.length == 0 && transcript.length > 0) {
       setCurrentMessage({
         author: "You",
-        content: transcript,
+        content: transcript.toLowerCase(),
         createdAt: new Date(),
         isSent: true,
       });
@@ -323,7 +328,7 @@ export function App() {
       setIsSpeaking(true);
       setCurrentMessage({
         author: "You",
-        content: interimTranscript,
+        content: interimTranscript.toLowerCase(),
         createdAt: new Date(),
         isSent: false,
       });
