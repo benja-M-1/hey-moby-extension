@@ -170,7 +170,7 @@ export function App() {
             ...current,
             {
               author: "Moby 🐳",
-              content: `Ok, I am starting a new container for the image "${container}"`,
+              content: `Ok, I am starting a new container for the image "${image}"`,
               createdAt: new Date(),
               isSent: true,
             },
@@ -306,7 +306,6 @@ export function App() {
         isSent: true,
       });
       setIsSpeaking(false);
-      matchCommands(transcript);
       resetTranscript();
     } else if (interimTranscript.length >= 1) {
       setIsSpeaking(true);
