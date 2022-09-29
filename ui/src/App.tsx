@@ -1,13 +1,20 @@
 import { createDockerDesktopClient } from "@docker/extension-api-client";
 import { ExecResult } from "@docker/extension-api-client-types/dist/v1/exec";
 import MicRoundedIcon from "@mui/icons-material/MicRounded";
+import MicOffRoundedIcon from "@mui/icons-material/MicOffRounded";
 import TipsAndUpdatesRoundedIcon from "@mui/icons-material/TipsAndUpdatesRounded";
+import HelpRoundedIcon from "@mui/icons-material/HelpRounded";
 import {
   Avatar,
   Box,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Grid,
+  IconButton,
   Stack,
-  Tooltip,
   Typography,
   useMediaQuery,
 } from "@mui/material";
@@ -35,6 +42,7 @@ interface Command {
   matchInterim?: boolean | undefined;
   fuzzyMatchingThreshold?: number | undefined;
   bestMatchOnly?: boolean | undefined;
+  example: string;
 }
 
 export function App() {
@@ -42,6 +50,7 @@ export function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentMessage, setCurrentMessage] = useState<Message>();
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [openHelpDialog, setOpenHelpDialog] = useState(false);
 
   const commands: Command[] = useMemo(
     () => [
@@ -59,6 +68,7 @@ export function App() {
           ]);
         },
         matchInterim: true,
+        example: "Hey Moby, how are you today?",
       },
       {
         command: ["wow", "whoa", "whoah"],
@@ -74,9 +84,10 @@ export function App() {
           ]);
         },
         matchInterim: true,
+        example: "Wow, Moby, you are so cool!",
       },
       {
-        command: "*create a docker file*",
+        command: "*create a (dockerfile)(docker file)*",
         callback: () => {
           setMessages((current) => [
             ...current,
@@ -89,6 +100,7 @@ export function App() {
           ]);
         },
         bestMatchOnly: true,
+        example: "Hey Moby, create a dockerfile please?",
       },
       {
         command: "*open the * tab*",
@@ -116,6 +128,7 @@ export function App() {
           }
         },
         bestMatchOnly: true,
+        example: "Hey Moby, open the containers tab please?",
       },
       {
         command: "*run (a)(an) :container container*",
@@ -215,6 +228,7 @@ export function App() {
           }
         },
         matchInterim: true,
+        example: "Hey Moby, run a node container please?",
       },
     ],
     []
@@ -295,7 +309,7 @@ export function App() {
   // By default, the transcript contains the entire conversation
   // This effect allows us to reset the transcript when the user stops speaking.
   useEffect(() => {
-    if (interimTranscript.length == 0) {
+    if (interimTranscript.length == 0 && transcript.length > 0) {
       setCurrentMessage({
         author: "You",
         content: transcript,
@@ -334,117 +348,158 @@ export function App() {
         <Typography variant="body1" color="text.secondary">
           🐳 Tell me what you want me to add in you dockerfiles or compose stack
         </Typography>
-        {listening && (
-          <Stack direction="row" justifyContent="flex-end" alignItems="center">
-            <Tooltip title="Moby is listening" placement="right">
-              <MicRoundedIcon
-                color="success"
-                alignmentBaseline="central"
-                sx={{ verticalAlign: "bottom" }}
-              />
-            </Tooltip>
-            <Button variant="contained" size="small" onClick={clear}>
-              Clear
-            </Button>
-          </Stack>
-        )}
       </Stack>
-      {!listening && (
-        <Grid
-          container
-          flex={1}
-          sx={{ width: "100%" }}
-          justifyContent="center"
-          alignItems="center"
+      <Box flex={1} minHeight={0}>
+        <Box
+          height="100%"
+          display="grid"
+          gridTemplateColumns="1fr"
+          gridTemplateRows="1fr auto"
+          gridTemplateAreas="'content' 'footer'"
         >
-          <Grid item>
-            <Button
-              variant="contained"
-              startIcon={<MicRoundedIcon />}
-              size="large"
-              onClick={startListening}
+          {messages.length > 0 && (
+            <AutoScrollable
+              gridArea="content"
+              marginTop={2}
+              paddingRight={1}
+              width="100%"
             >
-              Click to talk
-            </Button>
-          </Grid>
-        </Grid>
-      )}
-      {listening && (
-        <Box flex={1} minHeight={0}>
-          <Box
-            height="100%"
-            display="grid"
-            gridTemplateColumns="1fr"
-            gridTemplateRows="1fr auto"
-            gridTemplateAreas="'content' 'footer'"
-          >
-            {messages.length > 0 && (
-              <AutoScrollable
-                gridArea="content"
-                marginTop={2}
-                paddingRight={1}
-                width="100%"
-              >
-                <Conversation messages={messages} />
-              </AutoScrollable>
-            )}
-            {messages.length === 0 && (
+              <Conversation messages={messages} />
+            </AutoScrollable>
+          )}
+          {messages.length === 0 && (
+            <Grid
+              container
+              flex={1}
+              sx={{ width: "100%" }}
+              justifyContent="center"
+              alignItems="center"
+              direction="column"
+            >
               <Grid
-                container
-                flex={1}
-                sx={{ width: "100%" }}
-                justifyContent="center"
-                alignItems="center"
-                direction="column"
+                item
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: "100%",
+                }}
               >
-                <Grid
-                  item
+                <Avatar
+                  variant="circular"
                   sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    height: "100%",
+                    width: 56,
+                    height: 56,
+                    // FIXME: the theme mode and the colors should come from the theme but it is not currently
+                    //bgcolor: (theme) => useDarkTheme ? theme.palette.grey[400] : theme.palette.grey[200],
+                    bgcolor: isDarkTheme ? "#465C6E" : "#E1E2E6",
                   }}
                 >
-                  <Avatar
-                    variant="circular"
-                    sx={{
-                      width: 56,
-                      height: 56,
-                      // FIXME: the theme mode and the colors should come from the theme but it is not currently
-                      //bgcolor: (theme) => useDarkTheme ? theme.palette.grey[400] : theme.palette.grey[200],
-                      bgcolor: isDarkTheme ? "#465C6E" : "#E1E2E6",
-                    }}
-                  >
-                    <TipsAndUpdatesRoundedIcon />
-                  </Avatar>
-                  <Typography
-                    variant="body1"
-                    color="text.secondary"
-                    marginTop={2}
-                  >
-                    {`Try something like "Hey Moby, how are you?"`}
-                  </Typography>
-                  <Typography variant="body1" color="text.secondary">
-                    {`Or "Hey Moby, run a node container"`}
-                  </Typography>
-                </Grid>
+                  <TipsAndUpdatesRoundedIcon />
+                </Avatar>
+                <Typography variant="body1" marginTop={2}>
+                  {`Try something like "Hey Moby, how are you?"`}
+                </Typography>
+                <Typography variant="body1">
+                  {`Or "Hey Moby, run a node container"`}
+                </Typography>
+                {!listening && (
+                  <>
+                    <Typography variant="body1" mt={2}>
+                      You can even say it to me!
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      startIcon={<MicRoundedIcon />}
+                      size="large"
+                      onClick={startListening}
+                    >
+                      Click to talk
+                    </Button>
+                  </>
+                )}
               </Grid>
-            )}
-            <Box gridArea="footer" marginTop={2} paddingRight={1}>
-              <MessageEditor
-                message={currentMessage}
-                autoSave={isSpeaking}
-                onSend={(message: Message) => {
-                  setMessages((current) => [...current, message]);
-                  matchCommands(message.content);
-                }}
-              />
-            </Box>
+            </Grid>
+          )}
+          <Box gridArea="footer" marginTop={2} paddingRight={1}>
+            <MessageEditor
+              message={currentMessage}
+              autoSave={isSpeaking}
+              onSend={(message: Message) => {
+                setMessages((current) => [...current, message]);
+                matchCommands(message.content);
+              }}
+            />
+            <Stack
+              mt={1}
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+            >
+              {listening ? (
+                <Typography variant="body2" color="text.secondary">
+                  <MicRoundedIcon
+                    fontSize="small"
+                    color="disabled"
+                    alignmentBaseline="central"
+                    sx={{ verticalAlign: "bottom" }}
+                  />
+                  You can talk, Moby is listening
+                </Typography>
+              ) : (
+                <Box display="flex" alignItems="center">
+                  <MicOffRoundedIcon
+                    fontSize="small"
+                    color="disabled"
+                    alignmentBaseline="central"
+                    sx={{ verticalAlign: "bottom", mr: 1 }}
+                  />
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={startListening}
+                  >
+                    Click to talk
+                  </Button>
+                </Box>
+              )}
+              <IconButton onClick={() => setOpenHelpDialog(true)}>
+                <HelpRoundedIcon />
+              </IconButton>
+              {openHelpDialog && (
+                <Dialog
+                  fullWidth
+                  maxWidth="sm"
+                  open={openHelpDialog}
+                  onClose={() => setOpenHelpDialog(false)}
+                >
+                  <DialogTitle>🛟 Hey Moby Help center</DialogTitle>
+                  <DialogContent>
+                    <DialogContentText>
+                      Here is the list of commands you can use to interact with
+                      Moby.
+                      <ul>
+                        {commands.map((cmd, key) => (
+                          <li key={key}>{cmd.example}</li>
+                        ))}
+                      </ul>
+                    </DialogContentText>
+                  </DialogContent>
+                  <DialogActions>
+                    <Button
+                      variant="contained"
+                      onClick={() => setOpenHelpDialog(false)}
+                    >
+                      Close
+                    </Button>
+                  </DialogActions>
+                </Dialog>
+              )}
+            </Stack>
           </Box>
         </Box>
-      )}
+      </Box>
     </Stack>
   );
 }
