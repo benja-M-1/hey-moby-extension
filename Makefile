@@ -2,7 +2,7 @@ IMAGE?=benjaming/hey-moby-extension
 TAG?=latest
 
 BUILDER=buildx-multi-arch
-SPEECHLY_APP_ID=?
+SPEECHLY_APP_ID?=
 
 INFO_COLOR = \033[0;36m
 NO_COLOR   = \033[m

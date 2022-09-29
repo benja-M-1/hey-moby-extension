@@ -105,7 +105,7 @@ export function App() {
       {
         command: "*open the * tab*",
         callback: (pre: string, tab: string, _rest: string) => {
-          switch (tab) {
+          switch (tab.toLowerCase()) {
             case "containers":
               ddClient.desktopUI.navigate.viewContainers();
               break;
@@ -339,6 +339,8 @@ export function App() {
   const startListening = () =>
     SpeechRecognition.startListening({ continuous: true });
 
+  const stopListening = () => SpeechRecognition.stopListening();
+
   return (
     <Stack height="100%" width="100%">
       <Typography variant="h3" role="title">
@@ -438,15 +440,24 @@ export function App() {
               alignItems="center"
             >
               {listening ? (
-                <Typography variant="body2" color="text.secondary">
-                  <MicRoundedIcon
-                    fontSize="small"
-                    color="disabled"
-                    alignmentBaseline="central"
-                    sx={{ verticalAlign: "bottom" }}
-                  />
-                  You can talk, Moby is listening
-                </Typography>
+                <Box display="flex" alignItems="center">
+                  <Typography variant="body2" color="text.secondary">
+                    <MicRoundedIcon
+                      fontSize="small"
+                      color="disabled"
+                      alignmentBaseline="central"
+                      sx={{ verticalAlign: "bottom" }}
+                    />
+                    You can talk, Moby is listening
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={stopListening}
+                  >
+                    Mute
+                  </Button>
+                </Box>
               ) : (
                 <Box display="flex" alignItems="center">
                   <MicOffRoundedIcon
