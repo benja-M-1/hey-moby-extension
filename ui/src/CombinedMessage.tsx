@@ -1,10 +1,13 @@
 import {
   Avatar,
+  Button,
   Card,
   CardContent,
   CardHeader,
   CardProps,
   CircularProgress,
+  Link,
+  Stack,
   Typography,
 } from "@mui/material";
 import formatDistanceToNow from "date-fns/formatDistanceToNow";
@@ -14,11 +17,15 @@ interface Props extends Omit<CardProps, "variant"> {
   messages: MessageType[];
 }
 
-export function CombinedMessage({ messages, ...props }: Props) {
+export function CombinedMessage({ messages, sx, ...props }: Props) {
   const firstMessage = messages[0];
 
   return (
-    <Card variant="outlined" {...props}>
+    <Card
+      variant="outlined"
+      sx={{ ...sx, "&:hover": { boxShadow: "none" } }}
+      {...props}
+    >
       <CardHeader
         avatar={<Avatar>{firstMessage.author.slice(0, 1)}</Avatar>}
         title={firstMessage.author}
@@ -29,10 +36,17 @@ export function CombinedMessage({ messages, ...props }: Props) {
       />
       <CardContent>
         {messages.map((message, key) => (
-          <Typography key={key} mt={1} whiteSpace="pre-line">
-            {!message.isSent && <CircularProgress size={14} />}
-            {message.content}
-          </Typography>
+          <Stack key={key} direction="row" justifyContent="space-between">
+            <Typography mt={1} whiteSpace="pre-line">
+              {!message.isSent && <CircularProgress size={14} />}
+              {message.content}
+            </Typography>
+            {message.action && (
+              <Link underline="always" onClick={message.action.onClick}>
+                {message.action.text}
+              </Link>
+            )}
+          </Stack>
         ))}
       </CardContent>
     </Card>

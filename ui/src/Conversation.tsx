@@ -1,23 +1,31 @@
-import { Box, Divider, Stack } from "@mui/material";
+import { Stack } from "@mui/material";
 import { add, compareAsc, isBefore } from "date-fns";
 import { useMemo } from "react";
 import { CombinedMessage } from "./CombinedMessage";
 import { Message as MessageBlock } from "./Message";
 
+export interface MessageAction {
+  text: string;
+  onClick: (
+    event:
+      | React.MouseEvent<HTMLAnchorElement>
+      | React.MouseEvent<HTMLButtonElement>
+  ) => void;
+}
+
 export interface Message {
   author: string;
   content: string;
   createdAt: Date;
-  details?: string;
+  action?: MessageAction;
   isSent?: boolean;
 }
 
 interface Props {
   messages: Message[];
-  currentMessage?: Message;
 }
 
-export function Conversation({ messages, currentMessage }: Props) {
+export function Conversation({ messages }: Props) {
   const combinedMessages: Array<Message | Message[]> = useMemo(() => {
     const sortedMessage = messages.sort((a, b) => {
       if (!a.createdAt || !b.createdAt) {
@@ -71,7 +79,6 @@ export function Conversation({ messages, currentMessage }: Props) {
           />
         );
       })}
-      {currentMessage && <MessageBlock message={currentMessage} />}
     </Stack>
   );
 }

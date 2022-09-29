@@ -1,15 +1,24 @@
 import { createDockerDesktopClient } from "@docker/extension-api-client";
 import { ExecResult } from "@docker/extension-api-client-types/dist/v1/exec";
 import MicRoundedIcon from "@mui/icons-material/MicRounded";
-import { Box, Grid, Stack, Tooltip, Typography } from "@mui/material";
+import TipsAndUpdatesRoundedIcon from "@mui/icons-material/TipsAndUpdatesRounded";
+import {
+  Avatar,
+  Box,
+  Grid,
+  Stack,
+  Tooltip,
+  Typography,
+  useMediaQuery,
+} from "@mui/material";
 import Button from "@mui/material/Button";
 import { createSpeechlySpeechRecognition } from "@speechly/speech-recognition-polyfill";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import SpeechRecognition, {
   useSpeechRecognition,
 } from "react-speech-recognition";
-import { Conversation } from "./Conversation";
-import { Message } from "./Conversation";
+import { AutoScrollable } from "./AutoScrollable";
+import { Conversation, Message } from "./Conversation";
 import { MessageEditor } from "./MessageEditor";
 import { FuzzyMatch, Match, testFuzzyMatch, testMatch } from "./utils";
 
@@ -29,16 +38,16 @@ interface Command {
 }
 
 export function App() {
+  const isDarkTheme = useMediaQuery("(prefers-color-scheme: dark)");
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentMessage, setCurrentMessage] = useState<Message>();
-  const [isProcessing, setProcessing] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const commands: Command[] = useMemo(
     () => [
       {
-        command: "how are you",
+        command: "*how are you*",
         callback: () => {
-          setProcessing(true);
           setMessages((current) => [
             ...current,
             {
@@ -48,14 +57,12 @@ export function App() {
               isSent: true,
             },
           ]);
-          setProcessing(false);
         },
-        bestMatchOnly: true,
+        matchInterim: true,
       },
       {
         command: ["wow", "whoa", "whoah"],
         callback: () => {
-          setProcessing(true);
           setMessages((current) => [
             ...current,
             {
@@ -65,14 +72,12 @@ export function App() {
               isSent: true,
             },
           ]);
-          setProcessing(false);
         },
-        bestMatchOnly: true,
+        matchInterim: true,
       },
       {
-        command: "create a docker file",
+        command: "*create a docker file*",
         callback: () => {
-          setProcessing(true);
           setMessages((current) => [
             ...current,
             {
@@ -82,17 +87,43 @@ export function App() {
               isSent: true,
             },
           ]);
-          setProcessing(false);
         },
         bestMatchOnly: true,
       },
       {
-        command: "run a :container container",
-        callback: async (container: string) => {
+        command: "*open the * tab*",
+        callback: (pre: string, tab: string, _rest: string) => {
+          switch (tab) {
+            case "containers":
+              ddClient.desktopUI.navigate.viewContainers();
+              break;
+            case "images":
+              ddClient.desktopUI.navigate.viewImages();
+              break;
+            case "volumes":
+              ddClient.desktopUI.navigate.viewVolumes();
+              break;
+            default:
+              setMessages((current) => [
+                ...current,
+                {
+                  author: "Moby 🐳",
+                  content: `I am sorry I can't open the ${tab} tab`,
+                  createdAt: new Date(),
+                  isSent: true,
+                },
+              ]);
+          }
+        },
+        bestMatchOnly: true,
+      },
+      {
+        command: "*run (a)(an) :container container*",
+        callback: async (pre: string, container: string, _rest: string) => {
           const containers = [
             {
               image: "nginx:latest",
-              text: ["engine x"],
+              text: ["nginx", "engine x"],
             },
             {
               image: "node:latest",
@@ -100,17 +131,15 @@ export function App() {
             },
             {
               image: "postgres:latest",
-              text: ["postgres", "postgres ql"],
+              text: ["postgresql", "postgres", "postgres ql"],
             },
           ];
 
-          setProcessing(true);
           const image = containers.find((c) =>
             c.text.includes(container.toLowerCase())
           )?.image;
 
           if (!image) {
-            setProcessing(false);
             setMessages((current) => [
               ...current,
               {
@@ -123,6 +152,16 @@ export function App() {
 
             return;
           }
+
+          setMessages((current) => [
+            ...current,
+            {
+              author: "Moby 🐳",
+              content: `Ok, I am starting a new container for the image "${container}"`,
+              createdAt: new Date(),
+              isSent: true,
+            },
+          ]);
 
           let output: ExecResult;
           try {
@@ -147,6 +186,19 @@ export function App() {
                 content: `There you go, I ran a ${container} container for you 🐳`,
                 createdAt: new Date(),
                 isSent: true,
+                action: output.stdout?.toString()
+                  ? {
+                      text: "Container details",
+                      onClick: () => {
+                        console.log(
+                          output.stdout?.toString().replace(/\n/g, "")
+                        );
+                        ddClient.desktopUI.navigate.viewContainer(
+                          output.stdout?.toString().replace(/\n/g, "")
+                        );
+                      },
+                    }
+                  : undefined,
               },
             ]);
           } catch (e) {
@@ -160,17 +212,16 @@ export function App() {
                 isSent: true,
               },
             ]);
-          } finally {
-            setProcessing(false);
           }
         },
-        bestMatchOnly: true,
+        matchInterim: true,
       },
     ],
     []
   );
 
   const matchCommands = useCallback((input: string) => {
+    let commandMatched = false;
     commands.forEach(
       ({
         command,
@@ -188,6 +239,9 @@ export function App() {
             return testMatch(subcommand, input);
           })
           .filter((x) => x);
+        if (results.length > 0) {
+          commandMatched = true;
+        }
         if (isFuzzyMatch && bestMatchOnly && results.length >= 2) {
           results.sort((a, b) => {
             if (isFuzzyMatch && a && b) {
@@ -221,6 +275,18 @@ export function App() {
         }
       }
     );
+
+    if (!commandMatched) {
+      setMessages((current) => [
+        ...current,
+        {
+          author: "Moby 🐳",
+          content: `I am sorry but I don't understand "${input}"`,
+          createdAt: new Date(),
+          isSent: true,
+        },
+      ]);
+    }
   }, []);
 
   const { transcript, interimTranscript, listening, resetTranscript } =
@@ -230,18 +296,17 @@ export function App() {
   // This effect allows us to reset the transcript when the user stops speaking.
   useEffect(() => {
     if (interimTranscript.length == 0) {
-      setMessages((current) => [
-        ...current,
-        {
-          author: "You",
-          content: transcript,
-          createdAt: new Date(),
-          isSent: true,
-        },
-      ]);
+      setCurrentMessage({
+        author: "You",
+        content: transcript,
+        createdAt: new Date(),
+        isSent: true,
+      });
+      setIsSpeaking(false);
       matchCommands(transcript);
       resetTranscript();
-    } else if (interimTranscript.length == 1) {
+    } else if (interimTranscript.length >= 1) {
+      setIsSpeaking(true);
       setCurrentMessage({
         author: "You",
         content: interimTranscript,
@@ -299,7 +364,7 @@ export function App() {
               size="large"
               onClick={startListening}
             >
-              Click to
+              Click to talk
             </Button>
           </Grid>
         </Grid>
@@ -313,14 +378,64 @@ export function App() {
             gridTemplateRows="1fr auto"
             gridTemplateAreas="'content' 'footer'"
           >
-            <Box overflow="auto" gridArea="content" marginTop={2}>
-              <Conversation
-                messages={messages}
-                currentMessage={currentMessage}
-              />
-            </Box>
-            <Box gridArea="footer" marginTop={2}>
+            {messages.length > 0 && (
+              <AutoScrollable
+                gridArea="content"
+                marginTop={2}
+                paddingRight={1}
+                width="100%"
+              >
+                <Conversation messages={messages} />
+              </AutoScrollable>
+            )}
+            {messages.length === 0 && (
+              <Grid
+                container
+                flex={1}
+                sx={{ width: "100%" }}
+                justifyContent="center"
+                alignItems="center"
+                direction="column"
+              >
+                <Grid
+                  item
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    height: "100%",
+                  }}
+                >
+                  <Avatar
+                    variant="circular"
+                    sx={{
+                      width: 56,
+                      height: 56,
+                      // FIXME: the theme mode and the colors should come from the theme but it is not currently
+                      //bgcolor: (theme) => useDarkTheme ? theme.palette.grey[400] : theme.palette.grey[200],
+                      bgcolor: isDarkTheme ? "#465C6E" : "#E1E2E6",
+                    }}
+                  >
+                    <TipsAndUpdatesRoundedIcon />
+                  </Avatar>
+                  <Typography
+                    variant="body1"
+                    color="text.secondary"
+                    marginTop={2}
+                  >
+                    {`Try something like "Hey Moby, how are you?"`}
+                  </Typography>
+                  <Typography variant="body1" color="text.secondary">
+                    {`Or "Hey Moby, run a node container"`}
+                  </Typography>
+                </Grid>
+              </Grid>
+            )}
+            <Box gridArea="footer" marginTop={2} paddingRight={1}>
               <MessageEditor
+                message={currentMessage}
+                autoSave={isSpeaking}
                 onSend={(message: Message) => {
                   setMessages((current) => [...current, message]);
                   matchCommands(message.content);

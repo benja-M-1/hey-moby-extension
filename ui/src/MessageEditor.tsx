@@ -1,3 +1,4 @@
+import SendIcon from "@mui/icons-material/Send";
 import {
   FormControl,
   IconButton,
@@ -5,29 +6,50 @@ import {
   InputLabel,
   OutlinedInput,
 } from "@mui/material";
-import SendIcon from "@mui/icons-material/Send";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Message } from "./Conversation";
 
 interface Props {
+  message?: Message;
+  autoSave: boolean;
   onSend: (message: Message) => void;
 }
-export function MessageEditor({ onSend }: Props) {
-  const [message, setMessage] = useState("");
+
+export function MessageEditor({ message, autoSave, onSend }: Props) {
+  const [willAutoSave, setWillAutoSave] = useState(false);
+  const [content, setContent] = useState("");
 
   const handleSend = () => {
-    if (message.trim().length === 0) {
+    if (content.trim().length === 0) {
       return;
     }
 
     onSend({
       author: "You",
-      content: message.replace(/^\s+|\s+$/g, "").trim(),
+      content: content.replace(/^\s+|\s+$/g, "").trim(),
       createdAt: new Date(),
       isSent: true,
     });
-    setMessage("");
+    setContent("");
   };
+
+  useEffect(() => {
+    if (message) {
+      setContent(message.content);
+    }
+  }, [message]);
+
+  useEffect(() => {
+    if (autoSave) {
+      setWillAutoSave(true);
+    }
+
+    if (!autoSave && willAutoSave) {
+      handleSend();
+      setWillAutoSave(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoSave, willAutoSave]);
 
   return (
     <FormControl fullWidth>
@@ -36,8 +58,8 @@ export function MessageEditor({ onSend }: Props) {
         id="message"
         label="Message"
         multiline
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
         onKeyPress={(e) => {
           if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
@@ -48,7 +70,7 @@ export function MessageEditor({ onSend }: Props) {
           <InputAdornment position="end">
             <IconButton
               color="primary"
-              disabled={message.length === 0}
+              disabled={content.length === 0}
               onClick={handleSend}
             >
               <SendIcon />

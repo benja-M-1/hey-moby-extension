@@ -5,6 +5,8 @@ import {
   CardHeader,
   CardProps,
   CircularProgress,
+  Link,
+  Stack,
   Typography,
 } from "@mui/material";
 import formatDistanceToNow from "date-fns/formatDistanceToNow";
@@ -14,9 +16,14 @@ interface Props extends Omit<CardProps, "variant"> {
   message: MessageType;
 }
 
-export function Message({ message, ...props }: Props) {
+export function Message({ message, sx, ...props }: Props) {
   return (
-    <Card variant="outlined" {...props}>
+    <Card
+      variant="outlined"
+      elevation={0}
+      sx={{ ...sx, "&:hover": { boxShadow: "none" } }}
+      {...props}
+    >
       <CardHeader
         avatar={<Avatar>{message.author.slice(0, 1)}</Avatar>}
         title={message.author}
@@ -26,10 +33,17 @@ export function Message({ message, ...props }: Props) {
         }
       />
       <CardContent>
-        <Typography mt={1} whiteSpace="pre-line">
-          {!message.isSent && <CircularProgress size={14} />}
-          {message.content}
-        </Typography>
+        <Stack direction="row">
+          <Typography mt={1} whiteSpace="pre-line">
+            {!message.isSent && <CircularProgress size={14} />}
+            {message.content}
+          </Typography>
+          {message.action && (
+            <Link underline="always" onClick={message.action.onClick}>
+              {message.action.text}
+            </Link>
+          )}
+        </Stack>
       </CardContent>
     </Card>
   );
