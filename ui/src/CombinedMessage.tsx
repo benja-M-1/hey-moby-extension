@@ -4,16 +4,15 @@ import {
   CardContent,
   CardHeader,
   CardProps,
-  CircularProgress,
   Link,
   Stack,
   Typography,
 } from "@mui/material";
 import formatDistanceToNow from "date-fns/formatDistanceToNow";
-import { Message as MessageType } from "./Conversation";
+import { TimestampedMessage } from "./useMessagesContext";
 
 interface Props extends Omit<CardProps, "variant"> {
-  messages: MessageType[];
+  messages: TimestampedMessage[];
 }
 
 export function CombinedMessage({ messages, sx, ...props }: Props) {
@@ -37,7 +36,6 @@ export function CombinedMessage({ messages, sx, ...props }: Props) {
         {messages.map((message, key) => (
           <Stack key={key} direction="row" justifyContent="space-between">
             <Typography mt={key > 0 ? 1 : 0} whiteSpace="pre-line">
-              {!message.isSent && <CircularProgress size={14} />}
               {message.content}
             </Typography>
             {message.action && (

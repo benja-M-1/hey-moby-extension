@@ -13,8 +13,6 @@ export function AutoScrollable({ children, ...props }: BoxProps) {
         }
 
         const entry = entries[0];
-        console.log(entry.target.scrollTop, entry.target.scrollHeight);
-
         outer.scrollTop = entry.target.scrollHeight;
       });
       observer.observe(boxRef.current?.children[0] as HTMLElement);

@@ -3,6 +3,7 @@ TAG?=latest
 
 BUILDER=buildx-multi-arch
 SPEECHLY_APP_ID?=
+OPENAI_API_KEY?=
 
 INFO_COLOR = \033[0;36m
 NO_COLOR   = \033[m
@@ -10,6 +11,7 @@ NO_COLOR   = \033[m
 build-extension: ## Build service image to be deployed as a desktop extension
 	docker buildx build \
 		--secret id=SPEECHLY_APP_ID \
+		--secret id=OPENAI_API_KEY \
 		--load \
 		--tag=$(IMAGE):$(TAG) \
 		.
@@ -28,6 +30,7 @@ push-extension: prepare-buildx ## Build & Upload extension image to hub. Do not 
 	docker buildx build --push --builder=$(BUILDER) \
 		--platform=linux/amd64,linux/arm64 \
 		--secret id=SPEECHLY_APP_ID \
+		--secret id=OPENAI_API_KEY \
 		--tag=$(IMAGE):$(TAG) \
 		.
 
