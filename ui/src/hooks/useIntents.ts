@@ -1,10 +1,15 @@
+import { useMemo } from "react";
 import { createDockerDesktopClient } from "@docker/extension-api-client";
 import { ExecResult } from "@docker/extension-api-client-types/dist/v1/exec";
-import { useCallback, useMemo } from "react";
-import { escape } from "./strings";
+import {
+  FuzzyMatch,
+  Match,
+  testFuzzyMatch,
+  testMatch,
+} from "../utils/commands";
+import { escape } from "../utils/strings";
 import { useCodeContext } from "./useCodeContext";
 import { MessageAction, useMessagesContext } from "./useMessagesContext";
-import { FuzzyMatch, Match, testFuzzyMatch, testMatch } from "./utils";
 
 const ddClient = createDockerDesktopClient();
 

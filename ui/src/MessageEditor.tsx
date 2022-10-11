@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { CurrentlyWriting } from "./CurrentlyWriting";
-import { TimestampedMessage } from "./useMessagesContext";
+import { TimestampedMessage } from "./hooks/useMessagesContext";
 
 interface Props {
   message?: string;

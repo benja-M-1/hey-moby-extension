@@ -11,6 +11,10 @@ interface Props {
 export function NoConversation({ listening, startListening }: Props) {
   const isDarkTheme = useMediaQuery("(prefers-color-scheme: dark)");
 
+  // @ts-expect-error This is an experimental but that is supported in Electron (see
+  // https://developer.mozilla.org/en-US/docs/Web/API/Navigator/userAgentData)
+  const isMacOS = navigator.userAgentData?.platform === "macOS" || true;
+
   return (
     <Grid
       container
@@ -48,7 +52,7 @@ export function NoConversation({ listening, startListening }: Props) {
         <Typography variant="body1">
           {`Or "Hey Moby, run a node container"`}
         </Typography>
-        {!listening && (
+        {!listening && !isMacOS && (
           <>
             <Typography variant="body1" mt={2}>
               You can even say it to me!

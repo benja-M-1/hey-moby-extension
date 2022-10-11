@@ -1,6 +1,6 @@
 import { Typography } from "@mui/material";
 import { DotProgress } from "./DotProgress";
-import { useMessagesContext } from "./useMessagesContext";
+import { useMessagesContext } from "./hooks/useMessagesContext";
 
 export function CurrentlyWriting() {
   const { currentlyWriting } = useMessagesContext();

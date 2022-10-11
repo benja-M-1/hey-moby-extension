@@ -9,7 +9,7 @@ import {
   Typography,
 } from "@mui/material";
 import formatDistanceToNow from "date-fns/formatDistanceToNow";
-import { TimestampedMessage } from "./useMessagesContext";
+import { TimestampedMessage } from "./hooks/useMessagesContext";
 
 interface Props extends Omit<CardProps, "variant"> {
   messages: TimestampedMessage[];

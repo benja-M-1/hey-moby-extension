@@ -3,7 +3,7 @@ import { add, compareAsc, isBefore } from "date-fns";
 import { useMemo } from "react";
 import { CombinedMessage } from "./CombinedMessage";
 import { Message as MessageBlock } from "./Message";
-import { TimestampedMessage } from "./useMessagesContext";
+import { TimestampedMessage } from "./hooks/useMessagesContext";
 
 interface Props {
   messages: TimestampedMessage[];

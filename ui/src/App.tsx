@@ -1,7 +1,6 @@
 import HelpRoundedIcon from "@mui/icons-material/HelpRounded";
-import MicOffRoundedIcon from "@mui/icons-material/MicOffRounded";
 import MicRoundedIcon from "@mui/icons-material/MicRounded";
-import { Box, IconButton, Stack, Typography } from "@mui/material";
+import { Box, IconButton, Link, Stack, Typography } from "@mui/material";
 import { createSpeechlySpeechRecognition } from "@speechly/speech-recognition-polyfill";
 import { useEffect, useState } from "react";
 import SpeechRecognition, {
@@ -11,12 +10,12 @@ import { AutoScrollable } from "./AutoScrollable";
 import { Conversation } from "./Conversation";
 import { Header } from "./Header";
 import { HelpDialog } from "./HelpDialog";
+import { useCodeContext } from "./hooks/useCodeContext";
+import { useIntents } from "./hooks/useIntents";
+import { Message, useMessagesContext } from "./hooks/useMessagesContext";
+import { EditResponse, ErrorResponse, useOpenai } from "./hooks/useOpenai";
 import { MessageEditor } from "./MessageEditor";
 import { NoConversation } from "./NoConversation";
-import { useCodeContext } from "./useCodeContext";
-import { useIntents } from "./useIntents";
-import { Message, useMessagesContext } from "./useMessagesContext";
-import { EditResponse, ErrorResponse, useOpenai } from "./useOpenai";
 
 const appId = import.meta.env.VITE_SPEECHLY_APP_ID as string;
 const SpeechlySpeechRecognition = createSpeechlySpeechRecognition(appId);
@@ -30,6 +29,10 @@ export function App() {
     setMobyIsWriting,
     resetCurrentlyWriting,
   } = useMessagesContext();
+  // @ts-expect-error This is an experimental but that is supported in Electron (see
+  // https://developer.mozilla.org/en-US/docs/Web/API/Navigator/userAgentData)
+  const isMacOS = navigator.userAgentData?.platform === "macOS" || true;
+
   const [currentMessage, setCurrentMessage] = useState<string>();
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [openHelpDialog, setOpenHelpDialog] = useState(false);
@@ -146,38 +149,38 @@ export function App() {
             <Stack
               mt={1}
               direction="row"
-              justifyContent="space-between"
+              justifyContent={!isMacOS ? "space-between" : "flex-end"}
               alignItems="center"
             >
-              <Stack direction="row" gap={2}>
-                {listening ? (
-                  <Box display="flex" alignItems="center">
-                    <IconButton onClick={stopListening}>
-                      <MicRoundedIcon
-                        fontSize="small"
-                        color="disabled"
-                        alignmentBaseline="central"
-                      />
-                    </IconButton>
-                    <Typography variant="body2" color="text.secondary">
-                      Click to mute
-                    </Typography>
-                  </Box>
-                ) : (
-                  <Box display="flex" alignItems="center">
-                    <IconButton onClick={startListening}>
-                      <MicOffRoundedIcon
-                        fontSize="small"
-                        color="disabled"
-                        alignmentBaseline="central"
-                      />
-                    </IconButton>
-                    <Typography variant="body2" color="text.secondary">
-                      Click to speak
-                    </Typography>
-                  </Box>
-                )}
-              </Stack>
+              {!isMacOS && (
+                <Stack direction="row" alignItems="center">
+                  <IconButton
+                    onClick={!listening ? startListening : stopListening}
+                  >
+                    <MicRoundedIcon
+                      fontSize="small"
+                      color="disabled"
+                      alignmentBaseline="central"
+                    />
+                  </IconButton>
+                  <Typography variant="body2" color="text.secondary">
+                    {!listening ? "Click to speak" : "Click to mute"}
+                  </Typography>
+                </Stack>
+              )}
+              {code.length > 0 && (
+                <Typography variant="body2" color="text.secondary">
+                  Send{" "}
+                  <Link
+                    href="#"
+                    underline="always"
+                    onClick={() => setCurrentMessage("save")}
+                  >
+                    "save"
+                  </Link>{" "}
+                  to save the code generated in a file
+                </Typography>
+              )}
               <IconButton onClick={() => setOpenHelpDialog(true)}>
                 <HelpRoundedIcon />
               </IconButton>
